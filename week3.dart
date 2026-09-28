@@ -1,5 +1,5 @@
 // Week3.dart - Library Desk Assistant
-// Name: MUQADAS Roll no: 04072313021
+// Name: Muqadas Sabir   Roll no: 04072313021
 
 final List<Map<String, dynamic>> books = [
   {
@@ -39,13 +39,11 @@ final List<Map<String, dynamic>> books = [
   },
 ];
 
-// ---------- Part 1 functions ----------
+// Part 1: Functions and parameters
 double lateFee(int daysLate, double ratePerDay) => daysLate * ratePerDay;
 
 String formatTitle(String title, [String? author]) {
-  if (author == null) {
-    return title;
-  }
+  if (author == null) return title;
   return '$title by $author';
 }
 
@@ -60,10 +58,10 @@ Map<String, dynamic> makeBook({
 
 bool isClassic(int year) => year < 2000;
 
-// ---------- Part 2 functions ----------
+// Part 2: Higher-order functions, closures, and recursion
 List<String> transformAll(List<String> items, String Function(String) fn) {
-  List<String> result = [];
-  for (var item in items) {
+  final result = <String>[];
+  for (final item in items) {
     result.add(fn(item));
   }
   return result;
@@ -82,29 +80,26 @@ double Function(int) makeFeeCalculator(double rate) {
 }
 
 int sumDigits(int n) {
-  if (n < 10) {
-    return n;
-  }
-  return (n % 10) + sumDigits(n ~/ 10);
+  if (n < 10) return n;
+  return n % 10 + sumDigits(n ~/ 10);
 }
 
-// ---------- Part 3 functions ----------
+// Part 3: Collections
 Map<String, int> buildStock() {
   return {
-    for (var book in books) (book['title'] as String): (book['copies'] as int),
+    for (final book in books)
+      (book['title'] as String): (book['copies'] as int),
   };
 }
 
-// ---------- Part 4: generics ----------
+// Part 4: Generics
 class Box<T> {
   T value;
   Box(this.value);
 }
 
 T firstOr<T>(List<T> items, T fallback) {
-  if (items.isEmpty) {
-    return fallback;
-  }
+  if (items.isEmpty) return fallback;
   return items.first;
 }
 
@@ -117,7 +112,43 @@ class Pair<A, B> {
   String toString() => '($first, $second)';
 }
 
-void main() async {
+// Part 5: Error handling
+class BookNotFoundException implements Exception {
+  final String title;
+  BookNotFoundException(this.title);
+}
+
+class BookNotAvailableException implements Exception {
+  final String title;
+  BookNotAvailableException(this.title);
+}
+
+void checkOut(Map<String, int> stock, String title) {
+  if (!stock.containsKey(title)) {
+    throw BookNotFoundException(title);
+  }
+  if (stock[title]! <= 0) {
+    throw BookNotAvailableException(title);
+  }
+  stock[title] = stock[title]! - 1;
+}
+
+Map<String, dynamic> findBook(String title) {
+  return books.firstWhere((book) => book['title'] == title);
+}
+
+// Part 6: Future and async/await
+Future<String> fetchBookOfTheDay() async {
+  await Future.delayed(const Duration(seconds: 1));
+  return 'Dart in Action';
+}
+
+Future<String> fetchBroken() async {
+  await Future.delayed(const Duration(milliseconds: 500));
+  throw Exception('Server down');
+}
+
+Future<void> main() async {
   part1();
   part2();
   part3();
@@ -140,76 +171,69 @@ void part1() {
 void part2() {
   print('--- Part 2 ---');
 
-  var titles = ['Dart in Action', 'Clean Code'];
-  print(
-    transformAll(titles, (String s) {
-      return s.toUpperCase();
-    }),
-  );
+  final titles = ['Dart in Action', 'Clean Code'];
+  print(transformAll(titles, (String s) {
+    return s.toUpperCase();
+  }));
   print(transformAll(titles, (s) => '$s!'));
 
-  var desk1 = makeCounter();
-  var desk2 = makeCounter();
+  final desk1 = makeCounter();
+  final desk2 = makeCounter();
   print(desk1());
   print(desk1());
   print(desk1());
   print(desk2());
 
-  var studentFee = makeFeeCalculator(0.25);
-  var staffFee = makeFeeCalculator(0.10);
+  final studentFee = makeFeeCalculator(0.25);
+  final staffFee = makeFeeCalculator(0.10);
   print('Student fee: ${studentFee(4)}');
   print('Staff fee: ${staffFee(4)}');
-
   print('Sum of digits: ${sumDigits(2024)}');
 }
 
 void part3() {
   print('--- Part 3 ---');
 
-  // Task 3.1: map and where
-  var titles = books.map((book) => book['title'] as String).toList();
+  final titles = books.map((book) => book['title'] as String).toList();
   print('Titles: $titles');
 
-  var available = books
+  final available = books
       .where((book) => (book['copies'] as int) > 0)
       .map((book) => book['title'] as String)
       .toList();
   print('Available: $available');
 
-  // Task 3.2: fold and reduce
-  int totalCopies = books.fold(0, (sum, book) => sum + (book['copies'] as int));
+  final totalCopies = books.fold<int>(
+    0,
+    (sum, book) => sum + (book['copies'] as int),
+  );
   print('Total copies: $totalCopies');
 
-  var years = books.map((book) => book['year'] as int).toList();
-  int oldest = years.reduce((first, second) => first < second ? first : second);
+  final years = books.map((book) => book['year'] as int).toList();
+  final oldest = years.reduce((first, second) => first < second ? first : second);
   print('Oldest year: $oldest');
 
-  // Task 3.3: sort a copy, keep the original untouched
-  var sortedBooks = List.of(books);
+  final sortedBooks = List.of(books);
   sortedBooks.sort((x, y) => (x['year'] as int).compareTo(y['year'] as int));
-  var sortedTitles = sortedBooks
+  final sortedTitles = sortedBooks
       .map((book) => book['title'] as String)
       .toList();
   print('By year: $sortedTitles');
 
-  // Task 3.4: Map
-  var stock = buildStock();
+  final stock = buildStock();
   print('Stock: $stock');
   stock.forEach((title, copies) {
-    if (copies == 0) {
-      print('Out of stock: $title');
-    }
+    if (copies == 0) print('Out of stock: $title');
   });
-  print('Copies of Unknown: ${stock['Unknown'] ?? 0}');
+  print("Copies of Unknown: ${stock['Unknown'] ?? 0}");
 
-  // Task 3.5: Set
-  Set<String> allTags = {
-    for (var book in books) ...(book['tags'] as List<String>),
+  final Set<String> allTags = {
+    for (final book in books) ...(book['tags'] as List<String>),
   };
   print('All tags: $allTags');
 
-  var a = {'Dart in Action', 'Clean Code', 'Flutter Basics'};
-  var b = {'Clean Code', 'Flutter Basics', 'Algorithms'};
+  final a = {'Dart in Action', 'Clean Code', 'Flutter Basics'};
+  final b = {'Clean Code', 'Flutter Basics', 'Algorithms'};
   print('Union: ${a.union(b)}');
   print('Common: ${a.intersection(b)}');
   print('Only in A: ${a.difference(b)}');
@@ -218,25 +242,65 @@ void part3() {
 void part4() {
   print('--- Part 4 ---');
 
-  // Task 4.1: generic class
-  var intBox = Box<int>(5);
-  var stringBox = Box<String>('dart');
+  final intBox = Box<int>(5);
+  final stringBox = Box<String>('dart');
   print('Box<int>: ${intBox.value}');
   print('Box<String>: ${stringBox.value}');
-  // intBox.value = 'hello'; // compile error: String can't be assigned to int
+  // intBox.value = 'hello'; // String cannot be assigned to an int box.
 
-  // Task 4.2: generic function
   print(firstOr(['Dart in Action', 'Clean Code'], 'none'));
   print(firstOr<String>([], 'z'));
-
-  // Task 4.3: two type parameters
   print(Pair('Dart in Action', 3));
 }
 
 void part5() {
   print('--- Part 5 ---');
+
+  final stock = buildStock();
+  final requests = ['Dart in Action', 'Flutter Basics', 'Unknown Book'];
+  for (final title in requests) {
+    try {
+      checkOut(stock, title);
+      print('Checked out: $title');
+    } on BookNotFoundException catch (e) {
+      print('Not found: "${e.title}"');
+    } on BookNotAvailableException catch (e) {
+      print('Sorry: "${e.title}" has no copies left');
+    } finally {
+      print('Transaction logged.');
+    }
+  }
+  print("Copies left of Dart in Action: ${stock['Dart in Action']}");
+
+  try {
+    findBook('Missing');
+  } on StateError {
+    print('Search failed: no such book');
+  }
 }
 
 Future<void> part6() async {
   print('--- Part 6 ---');
+  print('Fetching...');
+  final book = await fetchBookOfTheDay();
+  print('Book of the day: $book');
+
+  // Without await, printing fetchBookOfTheDay() shows a Future, not its title.
+  // Keep await in the final version so the expected output matches.
+
+  try {
+    await fetchBroken();
+  } catch (e) {
+    print('Fetch failed: $e');
+  }
 }
+
+// Reflection
+// 1. I choose fold when I need a starting value or when the list may be empty.
+//    Reduce needs at least one item and uses it as the starting value.
+// 2. A closure captures a variable when it remembers that variable after the
+//    outer function returns. makeCounter captures its own count variable.
+// 3. A general catch (e) would catch BookNotAvailableException too, so its
+//    specific on clause must come first to print the correct message.
+// 4. Without await, the call returns a valid Future<String>, so it compiles.
+//    Printing that Future does not print the String it will eventually produce.
